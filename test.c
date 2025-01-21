@@ -22,8 +22,7 @@ int	main(void)
 	char	*line;
 
 	fd = open("./test.txt", O_RDONLY);
-	line = get_next_line(fd);
-	while (line)
+	while ((line = get_next_line(fd)))
 	{
 		printf("%s\n", line);
 		free(line);

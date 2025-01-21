@@ -18,14 +18,13 @@
 #endif
 
 char		*get_next_line(int fd);
-static char	*get_line(t_list *head_buffer_list, void *current_buffer, \
-				unsigned int i);
-static void	clean_buffer(void *current_buffer, unsigned int i);
-static void	increase_buffer(t_list *current_buffer_list, unsigned int *i);
+static char	*gen_line(t_list *head_buffer_list, void *current_buffer, int i);
+static void	clean_buffer(void *current_buffer, int i);
+static void	increase_buffer(t_list *current_buffer_list, int *i);
 
 char	*get_next_line(int fd)
 {
-	unsigned int	i;
+	int	i;
 	t_list			*head_buffer_list;
 	t_list			*current_buffer_list;
 	char			*line;
@@ -38,11 +37,14 @@ char	*get_next_line(int fd)
 	head_buffer_list = ft_lstnew(buffer);
 	current_buffer_list = head_buffer_list;
 	line = NULL;
-	while (read(fd, (char *)&current_buffer_list->content[i], 1) >= 0)
+	while (read(fd, current_buffer_list->content + i * sizeof(char), 1) > 0)
 	{
-		if ((char *)current_buffer_list->content[i] == '\n' || \
-			(char *)current_buffer_list->content[i] == '\0')
+		if (((char *)current_buffer_list->content)[i] == '\n' || \
+			((char *)current_buffer_list->content)[i] == '\0')
+		{
 			line = gen_line(head_buffer_list, current_buffer_list->content, i);
+			break;
+		}
 		if (i == BUFFER_SIZE - 1)
 			increase_buffer(current_buffer_list, &i);
 		else
@@ -51,8 +53,7 @@ char	*get_next_line(int fd)
 	return (line);
 }
 
-static char	*gen_line(t_list *head_buffer_list, void *current_buffer, \
-				unsigned int i)
+static char	*gen_line(t_list *head_buffer_list, void *current_buffer, int i)
 {
 	t_list	*temp;
 	char	*line;
@@ -69,11 +70,12 @@ static char	*gen_line(t_list *head_buffer_list, void *current_buffer, \
 		ft_memcpy(&line[j * BUFFER_SIZE], temp->content, BUFFER_SIZE);
 		head_buffer_list = temp->next;
 		ft_lstdelone(temp, free);
+		j++;
 	}
 	return (line);
 }
 
-static void	clean_buffer(void *current_buffer, unsigned int i)
+static void	clean_buffer(void *current_buffer, int i)
 {
 	while (i < BUFFER_SIZE)
 	{
@@ -82,7 +84,7 @@ static void	clean_buffer(void *current_buffer, unsigned int i)
 	}
 }
 
-static void	increase_buffer(t_list *current_buffer_list, unsigned int *i)
+static void	increase_buffer(t_list *current_buffer_list, int *i)
 {
 	t_list	*new_buffer_list;
 	char	*new_buffer;
