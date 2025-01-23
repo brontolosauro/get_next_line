@@ -6,7 +6,7 @@
 /*   By: rfani <rfani@student.42firenze.it>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/20 00:08:27 by rfani             #+#    #+#             */
-/*   Updated: 2025/01/20 00:12:01 by rfani            ###   ########.fr       */
+/*   Updated: 2025/01/23 12:54:04 by rfani            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -62,4 +62,21 @@ t_list	*ft_lstnew(void *content)
 	new->content = content;
 	new->next = NULL;
 	return (new);
+}
+
+void	*ft_calloc(size_t nmemb, size_t size)
+{
+	void	*ptr;
+	size_t	i;
+
+	ptr = malloc(nmemb * size);
+	if (ptr == NULL)
+		return (NULL);
+	i = 0;
+	while (i < nmemb * size)
+	{
+		*((char *)ptr + i) = '\0';
+		i++;
+	}
+	return (ptr);
 }
