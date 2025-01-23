@@ -6,7 +6,7 @@
 /*   By: rfani <rfani@student.42firenze.it>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/18 14:46:22 by rfani             #+#    #+#             */
-/*   Updated: 2025/01/18 15:18:30 by rfani            ###   ########.fr       */
+/*   Updated: 2025/01/23 13:45:22 by rfani            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,8 +20,20 @@ int	main(void)
 {
 	int		fd;
 	char	*line;
+//	size_t	dummy;
+//	char	buff[1];
 
 	fd = open("./test.txt", O_RDONLY);
+	// dummy = read(fd, buff, 1);
+	// printf("read() = %lu;\n", dummy);
+	// printf("fd = %d;\n", fd);
+	// printf("EOF int = %d;\n", (int)buff[0]);
+	// printf("EOF str = %s;\n", buff);
+	// if (EOF == buff[0])
+	// 	printf("fine del file raggiunta\n");
+	// if (!buff[0])
+	// 	printf("stringa vuota\n");
+
 	while ((line = get_next_line(fd)))
 	{
 		printf("%s\n", line);
