@@ -6,7 +6,7 @@
 /*   By: rfani <rfani@student.42firenze.it>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/18 14:46:22 by rfani             #+#    #+#             */
-/*   Updated: 2025/01/23 13:45:22 by rfani            ###   ########.fr       */
+/*   Updated: 2025/01/24 14:08:19 by rfani            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,9 +34,12 @@ int	main(void)
 	// if (!buff[0])
 	// 	printf("stringa vuota\n");
 
-	while ((line = get_next_line(fd)))
+	while (1)
 	{
-		printf("%s\n", line);
+		line = get_next_line(fd);
+		if (!line)
+			break ;
+		printf("%s", line);
 		free(line);
 	}
 	close(fd);
