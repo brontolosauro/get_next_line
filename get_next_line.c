@@ -6,7 +6,7 @@
 /*   By: rfani <rfani@student.42firenze.it>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/18 11:22:12 by rfani             #+#    #+#             */
-/*   Updated: 2025/01/23 13:40:58 by rfani            ###   ########.fr       */
+/*   Updated: 2025/01/24 14:04:36 by rfani            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,10 +17,10 @@
 # define BUFFER_SIZE 32
 #endif
 
-char			*get_next_line(int fd);
-static t_list	*fetch_stream(int fd);
-static t_list	*increase_buffer(t_list *current_buffer, int *i);
-static char		*gen_line(t_list *head_buffer);
+char						*get_next_line(int fd);
+static t_list				*fetch_stream(int fd);
+static unsigned char		*increase_buffer(t_list **current_buffer, int *i);
+static char					*gen_line(t_list *head_buffer);
 
 char	*get_next_line(int fd)
 {
@@ -40,38 +40,42 @@ char	*get_next_line(int fd)
 
 static t_list	*fetch_stream(int fd)
 {
-	int		i;
-	char	*buffer;
-	t_list	*head_buffer;
-	t_list	*current_buffer;
+	int				i;
+	unsigned char	*buffer;
+	t_list			*head_buffer;
+	t_list			*current_buffer;
+	ssize_t			read_ret;
 
 	i = 0;
-	buffer = (char *)ft_calloc(BUFFER_SIZE, sizeof(char));
+	buffer = (unsigned char *)ft_calloc(BUFFER_SIZE, sizeof(unsigned char));
 	head_buffer = ft_lstnew(buffer);
 	current_buffer = head_buffer;
-	while (read(fd, current_buffer->content + i * sizeof(char), 1) >= 0)
+	while ((read_ret = read(fd, &buffer[i], 1)) >= 0)
 	{
-		if (((char *)current_buffer->content)[i] == '\n' || \
-			((char *)current_buffer->content)[i] == '\0')
+		printf("read_ret = %zd\n", read_ret);
+		if (buffer[i] == '\n' || buffer[i] == '\0')
 			break ;
 		else if (i == BUFFER_SIZE - 1)
-			current_buffer = increase_buffer(current_buffer, &i);
+			buffer = increase_buffer(&current_buffer, &i);
 		else
 			i++;
 	}
 	return (head_buffer);
 }
 
-static t_list	*increase_buffer(t_list *current_buffer, int *i)
+static unsigned char	*increase_buffer(t_list **current_buffer, int *i)
 {
-	t_list	*new_buffer_list;
-	char	*new_buffer;
+	t_list			*current_buffer_list;
+	t_list			*new_buffer_list;
+	unsigned char	*new_buffer;
 
-	new_buffer = (char *)ft_calloc(BUFFER_SIZE, sizeof(char));
+	current_buffer_list = *current_buffer;
+	new_buffer = (unsigned char *)ft_calloc(BUFFER_SIZE, sizeof(unsigned char));
 	new_buffer_list = ft_lstnew(new_buffer);
-	current_buffer->next = new_buffer_list;
+	current_buffer_list->next = new_buffer_list;
+	*current_buffer = new_buffer_list;
 	*i = 0;
-	return (new_buffer_list);
+	return (new_buffer);
 }
 
 static char	*gen_line(t_list *head_buffer)
@@ -82,7 +86,7 @@ static char	*gen_line(t_list *head_buffer)
 	int		j;
 
 	buffer_list_size = ft_lstsize(head_buffer);
-	line = (char *)ft_malloc(buffer_list_size * BUFFER_SIZE, sizeof(char));
+	line = (char *)ft_calloc(buffer_list_size * BUFFER_SIZE, sizeof(char));
 	j = 0;
 	while (j < buffer_list_size)
 	{
