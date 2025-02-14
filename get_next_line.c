@@ -6,7 +6,7 @@
 /*   By: rfani <rfani@student.42firenze.it>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/18 11:22:12 by rfani             #+#    #+#             */
-/*   Updated: 2025/01/24 14:04:36 by rfani            ###   ########.fr       */
+/*   Updated: 2025/02/14 19:25:38 by rfani            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,25 +17,60 @@
 # define BUFFER_SIZE 32
 #endif
 
-char						*get_next_line(int fd);
-static t_list				*fetch_stream(int fd);
-static unsigned char		*increase_buffer(t_list **current_buffer, int *i);
-static char					*gen_line(t_list *head_buffer);
+char					*get_next_line(int fd);
+static void				check_buffer(char **buffer, int *buffer_index,
+							char **line, ssize_t *read_ret);
+static unsigned char	*increase_buffer(t_list **current_buffer, int *i);
+static char				*gen_line(t_list *head_buffer);
 
 char	*get_next_line(int fd)
 {
-	t_list			*buffer_list;
-	char			*line;
+	static char			*buffer;
+	static int			buffer_index;
+	char				*line;
+	static ssize_t		read_ret;
 
 	if (BUFFER_SIZE <= 0 || fd < 0 || read(fd, 0, 0) < 0)
 		return (NULL);
-	buffer_list = fetch_stream(fd);
-	if (!buffer_list)
+	while (!buffer)
+	{
+		buffer = (char *)malloc(BUFFER_SIZE);
+		if (!buffer)
+			return (NULL);
+		read_ret = read(fd, buffer, BUFFER_SIZE);
+	}
+	if (read_ret == 0)
 		return (NULL);
-	line = gen_line(buffer_list);
-	if (!line || !line[0])
-		return (NULL);
+	check_buffer(&buffer, &buffer_index, &line, &read_ret);
 	return (line);
+}
+
+static void	check_buffer(char **buffer, int *buffer_index, char **line,
+	ssize_t *read_ret)
+{
+	int		i;
+	char	*temp;
+
+	i = 0;
+	temp = (char *)malloc(BUFFER_SIZE);
+	while (*buffer_index < *read_ret && (*buffer)[*buffer_index] != '\n')
+	{
+		temp[i] = (*buffer)[*buffer_index];
+		(*buffer_index)++;
+		i++;
+	}
+	if ((*buffer)[*buffer_index] == '\n')
+	{
+		add_to_line(line, temp, i);
+		(*buffer_index)++;
+	}
+	else
+	{
+		add_to_line(line, temp, i);
+		*read_ret = read(fd, *buffer, BUFFER_SIZE);
+		*buffer_index = 0;
+		check_buffer(buffer, buffer_index, line, read_ret);
+	}
 }
 
 static t_list	*fetch_stream(int fd)
