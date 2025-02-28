@@ -6,7 +6,7 @@
 /*   By: rfani <rfani@student.42firenze.it>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/18 10:55:14 by rfani             #+#    #+#             */
-/*   Updated: 2025/01/23 13:14:06 by rfani            ###   ########.fr       */
+/*   Updated: 2025/02/28 19:34:20 by rfani            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,8 +22,8 @@ typedef struct s_list
 char	*get_next_line(int fd);
 int		ft_lstsize(t_list *lst);
 void	ft_lstdelone(t_list *lst, void (*del)(void *));
-void	*ft_memcpy(void *dest, const void *src, size_t n);
 t_list	*ft_lstnew(void *content);
-void	*ft_calloc(size_t nmemb, size_t size);
+void	ft_lstclear(t_list **lst, void (*del)(void *));
+void	ft_lstadd_back(t_list **lst, t_list *new);
 
 #endif
