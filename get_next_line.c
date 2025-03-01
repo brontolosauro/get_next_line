@@ -6,7 +6,7 @@
 /*   By: rfani <rfani@student.42firenze.it>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/18 11:22:12 by rfani             #+#    #+#             */
-/*   Updated: 2025/02/28 19:10:16 by rfani            ###   ########.fr       */
+/*   Updated: 2025/03/01 19:52:08 by rfani            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,21 +15,39 @@
 #ifndef BUFFER_SIZE
 # define BUFFER_SIZE 32
 #endif
+#include <stdio.h>
+#include <stdlib.h>
+#include <fcntl.h>
 
 char	*get_next_line(int fd);
-char	*gen_buff(int fd, int *buff_size);
-char	*scan_buff(int fd, char **buffer, int *buff_index, int *buff_size);
+char	*gen_buff(int fd, ssize_t *buff_size);
+char	*scan_buff(int fd, char **buffer, int *buff_index, ssize_t *buff_size);
 int		store_item(t_list **line_lst, char buff_item);
-char	*lst_to_str(t_list **line_lst);
+char	*lst_to_str(t_list **line_lst, char *buffer, ssize_t buff_size);
+
+int	main(void)
+{
+	int		fd;
+	char	*line;
+
+	fd = open("./test.txt", O_RDONLY);
+	printf("fd: %d\n", fd);
+
+	line = get_next_line(fd);
+	printf("%s", line);
+	free(line);
+	close(fd);
+	return (0);
+}
 
 char	*get_next_line(int fd)
 {
-	static char	*buffer;
-	static int	buff_size;
-	static int	buff_index;
-	char		*line_str;
+	static char		*buffer;
+	static ssize_t	buff_size;
+	static int		buff_index;
+	char			*line_str;
 
-	if (buff_size <= 0 || fd < 0 || read(fd, 0, 0) < 0)
+	if (BUFFER_SIZE <= 0 || fd < 0 || read(fd, 0, 0) < 0)
 		return (NULL);
 	line_str = NULL;
 	if (buff_size == 0)
@@ -38,16 +56,17 @@ char	*get_next_line(int fd)
 		return (NULL);
 	if (buff_size > 0)
 		line_str = scan_buff(fd, &buffer, &buff_index, &buff_size);
+	else
+		free(buffer);
 	return (line_str);
 }
 
-char	*gen_buff(int fd, int *buff_size)
+char	*gen_buff(int fd, ssize_t *buff_size)
 {
-	char	*buffer;
-	int		read_size;
+	char		*buffer;
 
 	buffer = (char *)malloc(sizeof(char) * (BUFFER_SIZE));
-	*buff_size = read(fd, buffer, buff_size);
+	*buff_size = read(fd, buffer, BUFFER_SIZE);
 	if (*buff_size == -1)
 	{
 		free(buffer);
@@ -56,11 +75,10 @@ char	*gen_buff(int fd, int *buff_size)
 	return (buffer);
 }
 
-char	*scan_buff(int fd, char **buffer, int *buff_index, int *buff_size)
+char	*scan_buff(int fd, char **buffer, int *buff_index, ssize_t *buff_size)
 {
 	t_list	*line_lst;
 	int		storage_error;
-	char	*line_str;
 
 	line_lst = NULL;
 	while (*buffer[*buff_index] != '\n')
@@ -76,38 +94,35 @@ char	*scan_buff(int fd, char **buffer, int *buff_index, int *buff_size)
 		if (*buff_size == 0)
 			break ;
 		if (*buff_size == -1)
+		{
 			return (NULL);
+			free(*buffer);
+		}
 		(*buff_index)++;
 	}
-	line_str = lst_to_str(&line_lst);
-	return (line_str);
+	return (lst_to_str(&line_lst, *buffer, *buff_size));
 }
 
 int	store_item(t_list **line_lst, char buff_item)
 {
 	char	*item;
 	t_list	*tail;
+	int		err_code;
 
 	item = (char *)malloc(sizeof(char));
 	if (!item)
 		return (1);
-	if (!*line_lst)
-	{
-		*line_lst = ft_lstnew(item);
-		if (!*line_lst)
-			return (1);
-	}
+	*item = buff_item;
+	tail = ft_lstnew(item);
+	ft_lstadd_back(line_lst, tail);
+	if (!tail)
+		err_code = 1;
 	else
-	{
-		tail = ft_lstnew(item);
-		if (!tail)
-			return (1);
-		ft_lstadd_back(line_lst, tail);
-		return (0);
-	}
+		err_code = 0;
+	return (err_code);
 }
 
-char	*lst_to_str(t_list **line_lst)
+char	*lst_to_str(t_list **line_lst, char *buffer, ssize_t buff_size)
 {
 	char	*line_str;
 	t_list	*temp;
@@ -125,5 +140,7 @@ char	*lst_to_str(t_list **line_lst)
 		i++;
 	}
 	ft_lstclear(line_lst, free);
+	if (buff_size == 0)
+		free(buffer);
 	return (line_str);
 }

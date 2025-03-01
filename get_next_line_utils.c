@@ -6,7 +6,7 @@
 /*   By: rfani <rfani@student.42firenze.it>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/20 00:08:27 by rfani             #+#    #+#             */
-/*   Updated: 2025/02/28 19:34:23 by rfani            ###   ########.fr       */
+/*   Updated: 2025/03/01 17:24:33 by rfani            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -74,7 +74,8 @@ void	ft_lstadd_back(t_list **lst, t_list *new)
 		*lst = new;
 		return ;
 	}
-	last = ft_lstlast(*lst);
+	last = *lst;
+	while (last->next)
+		last = last->next;
 	last->next = new;
 }
-
