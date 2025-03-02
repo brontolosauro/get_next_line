@@ -6,7 +6,7 @@
 /*   By: rfani <rfani@student.42firenze.it>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/20 00:08:27 by rfani             #+#    #+#             */
-/*   Updated: 2025/03/01 17:24:33 by rfani            ###   ########.fr       */
+/*   Updated: 2025/03/02 22:05:09 by rfani            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,15 +28,6 @@ int	ft_lstsize(t_list *lst)
 	return (count);
 }
 
-void	ft_lstdelone(t_list *lst, void (*del)(void *))
-{
-	if (lst && del)
-	{
-		del(lst->content);
-		free(lst);
-	}
-}
-
 t_list	*ft_lstnew(void *content)
 {
 	t_list	*new;
@@ -49,6 +40,23 @@ t_list	*ft_lstnew(void *content)
 	return (new);
 }
 
+void	*ft_calloc(size_t nmemb, size_t size)
+{
+	void	*ptr;
+	size_t	i;
+
+	i = 0;
+	ptr = malloc(nmemb * size);
+	if (ptr == NULL)
+		return (NULL);
+	while (i < nmemb * size)
+	{
+		*((char *)ptr + i) = 0;
+		i++;
+	}
+	return (ptr);
+}
+
 void	ft_lstclear(t_list **lst, void (*del)(void *))
 {
 	t_list	*temp;
@@ -58,7 +66,8 @@ void	ft_lstclear(t_list **lst, void (*del)(void *))
 	while (*lst)
 	{
 		temp = (*lst)->next;
-		ft_lstdelone(*lst, del);
+		del((*lst)->content);
+		free(*lst);
 		*lst = temp;
 	}
 }

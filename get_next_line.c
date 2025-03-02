@@ -6,7 +6,7 @@
 /*   By: rfani <rfani@student.42firenze.it>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/18 11:22:12 by rfani             #+#    #+#             */
-/*   Updated: 2025/03/01 19:52:08 by rfani            ###   ########.fr       */
+/*   Updated: 2025/03/02 22:38:19 by rfani            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,6 +15,7 @@
 #ifndef BUFFER_SIZE
 # define BUFFER_SIZE 32
 #endif
+// needed for main()
 #include <stdio.h>
 #include <stdlib.h>
 #include <fcntl.h>
@@ -22,7 +23,7 @@
 char	*get_next_line(int fd);
 char	*gen_buff(int fd, ssize_t *buff_size);
 char	*scan_buff(int fd, char **buffer, int *buff_index, ssize_t *buff_size);
-int		store_item(t_list **line_lst, char buff_item);
+int		store_item(t_list **line_lst, char buff_item, int **buff_index);
 char	*lst_to_str(t_list **line_lst, char *buffer, ssize_t buff_size);
 
 int	main(void)
@@ -32,9 +33,13 @@ int	main(void)
 
 	fd = open("./test.txt", O_RDONLY);
 	printf("fd: %d\n", fd);
-
 	line = get_next_line(fd);
-	printf("%s", line);
+	while (line)
+	{
+		printf("%s", line);
+		free(line);
+		line = get_next_line(fd);
+	}
 	free(line);
 	close(fd);
 	return (0);
@@ -65,7 +70,7 @@ char	*gen_buff(int fd, ssize_t *buff_size)
 {
 	char		*buffer;
 
-	buffer = (char *)malloc(sizeof(char) * (BUFFER_SIZE));
+	buffer = (char *)calloc((BUFFER_SIZE), sizeof(char));
 	*buff_size = read(fd, buffer, BUFFER_SIZE);
 	if (*buff_size == -1)
 	{
@@ -81,35 +86,36 @@ char	*scan_buff(int fd, char **buffer, int *buff_index, ssize_t *buff_size)
 	int		storage_error;
 
 	line_lst = NULL;
-	while (*buffer[*buff_index] != '\n')
+	while ((*buffer)[*buff_index] != '\n')
 	{
-		storage_error = store_item(&line_lst, *buffer[*buff_index]);
+		storage_error
+			= store_item(&line_lst, (*buffer)[*buff_index], &buff_index);
 		if (storage_error)
 			return (NULL);
-		if (*buff_index == *buff_size - 1)
+		if (*buff_index == *buff_size)
 		{
 			*buff_size = read(fd, *buffer, BUFFER_SIZE);
 			*buff_index = 0;
 		}
 		if (*buff_size == 0)
-			break ;
+			return (lst_to_str(&line_lst, *buffer, *buff_size));
 		if (*buff_size == -1)
 		{
 			return (NULL);
 			free(*buffer);
 		}
-		(*buff_index)++;
 	}
+	store_item(&line_lst, '\n', &buff_index);
 	return (lst_to_str(&line_lst, *buffer, *buff_size));
 }
 
-int	store_item(t_list **line_lst, char buff_item)
+int	store_item(t_list **line_lst, char buff_item, int **buff_index)
 {
 	char	*item;
 	t_list	*tail;
 	int		err_code;
 
-	item = (char *)malloc(sizeof(char));
+	item = (char *)calloc(1, sizeof(char));
 	if (!item)
 		return (1);
 	*item = buff_item;
@@ -119,6 +125,7 @@ int	store_item(t_list **line_lst, char buff_item)
 		err_code = 1;
 	else
 		err_code = 0;
+	**buff_index += 1;
 	return (err_code);
 }
 
@@ -127,8 +134,10 @@ char	*lst_to_str(t_list **line_lst, char *buffer, ssize_t buff_size)
 	char	*line_str;
 	t_list	*temp;
 	int		i;
+	int		lst_size;
 
-	line_str = (char *)malloc(sizeof(char) * ft_lstsize(*line_lst));
+	lst_size = ft_lstsize(*line_lst);
+	line_str = (char *)calloc((ssize_t)lst_size, sizeof(char));
 	if (!line_str)
 		return (NULL);
 	i = 0;
