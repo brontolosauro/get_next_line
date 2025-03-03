@@ -6,7 +6,7 @@
 /*   By: rfani <rfani@student.42firenze.it>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/18 11:22:12 by rfani             #+#    #+#             */
-/*   Updated: 2025/03/02 22:38:19 by rfani            ###   ########.fr       */
+/*   Updated: 2025/03/03 03:58:09 by rfani            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,9 +21,10 @@
 #include <fcntl.h>
 
 char	*get_next_line(int fd);
-char	*gen_buff(int fd, ssize_t *buff_size);
-char	*scan_buff(int fd, char **buffer, int *buff_index, ssize_t *buff_size);
-int		store_item(t_list **line_lst, char buff_item, int **buff_index);
+int		scan_buff(
+			t_list **line_lst,
+			char *buffer, int *buff_index, ssize_t buff_size);
+void	store_item(t_list **line_lst, char buff_item);
 char	*lst_to_str(t_list **line_lst, char *buffer, ssize_t buff_size);
 
 int	main(void)
@@ -50,83 +51,59 @@ char	*get_next_line(int fd)
 	static char		*buffer;
 	static ssize_t	buff_size;
 	static int		buff_index;
-	char			*line_str;
+	t_list			*line_lst;
+	int				eof;
 
 	if (BUFFER_SIZE <= 0 || fd < 0 || read(fd, 0, 0) < 0)
 		return (NULL);
-	line_str = NULL;
-	if (buff_size == 0)
-		buffer = gen_buff(fd, &buff_size);
-	if (!buffer)
-		return (NULL);
-	if (buff_size > 0)
-		line_str = scan_buff(fd, &buffer, &buff_index, &buff_size);
-	else
-		free(buffer);
-	return (line_str);
-}
-
-char	*gen_buff(int fd, ssize_t *buff_size)
-{
-	char		*buffer;
-
-	buffer = (char *)calloc((BUFFER_SIZE), sizeof(char));
-	*buff_size = read(fd, buffer, BUFFER_SIZE);
-	if (*buff_size == -1)
-	{
-		free(buffer);
-		return (NULL);
-	}
-	return (buffer);
-}
-
-char	*scan_buff(int fd, char **buffer, int *buff_index, ssize_t *buff_size)
-{
-	t_list	*line_lst;
-	int		storage_error;
-
 	line_lst = NULL;
-	while ((*buffer)[*buff_index] != '\n')
+	eof = 0;
+	if (buff_size == 0)
 	{
-		storage_error
-			= store_item(&line_lst, (*buffer)[*buff_index], &buff_index);
-		if (storage_error)
-			return (NULL);
-		if (*buff_index == *buff_size)
-		{
-			*buff_size = read(fd, *buffer, BUFFER_SIZE);
-			*buff_index = 0;
-		}
-		if (*buff_size == 0)
-			return (lst_to_str(&line_lst, *buffer, *buff_size));
-		if (*buff_size == -1)
-		{
-			return (NULL);
-			free(*buffer);
-		}
+		buffer = calloc(BUFFER_SIZE, sizeof(char));
+		buff_size = read(fd, buffer, BUFFER_SIZE);
 	}
-	store_item(&line_lst, '\n', &buff_index);
-	return (lst_to_str(&line_lst, *buffer, *buff_size));
+	while (scan_buff(&line_lst, buffer, &buff_index, buff_size) && !eof)
+	{
+		buff_size = read(fd, buffer, BUFFER_SIZE);
+		buff_index = 0;
+		if (buff_size < BUFFER_SIZE)
+			eof = 1;
+	}
+	return (lst_to_str(&line_lst, buffer, buff_size));
 }
 
-int	store_item(t_list **line_lst, char buff_item, int **buff_index)
+int	scan_buff(
+	t_list **line_lst, char *buffer, int *buff_index, ssize_t buff_size)
+{
+	while (*buff_index < buff_size)
+	{
+		store_item(line_lst, buffer[*buff_index]);
+		if (buffer[*buff_index] == '\n')
+		{
+			if (*buff_index == buff_size - 1)
+				return (0);
+			(*buff_index)++;
+			return (0);
+		}
+		(*buff_index)++;
+	}
+	if ((buff_size < BUFFER_SIZE) && buff_index == buff_size - 1)
+		continue_scan = 0;
+	else
+		continue_scan = 1;
+	return (1);
+}
+
+void	store_item(t_list **line_lst, char buff_item)
 {
 	char	*item;
 	t_list	*tail;
-	int		err_code;
 
 	item = (char *)calloc(1, sizeof(char));
-	if (!item)
-		return (1);
 	*item = buff_item;
 	tail = ft_lstnew(item);
 	ft_lstadd_back(line_lst, tail);
-	if (!tail)
-		err_code = 1;
-	else
-		err_code = 0;
-	**buff_index += 1;
-	return (err_code);
 }
 
 char	*lst_to_str(t_list **line_lst, char *buffer, ssize_t buff_size)
@@ -149,7 +126,7 @@ char	*lst_to_str(t_list **line_lst, char *buffer, ssize_t buff_size)
 		i++;
 	}
 	ft_lstclear(line_lst, free);
-	if (buff_size == 0)
+	if (buff_size <= 0)
 		free(buffer);
 	return (line_str);
 }
