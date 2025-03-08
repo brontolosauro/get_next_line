@@ -6,7 +6,7 @@
 /*   By: rfani <rfani@student.42firenze.it>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/18 11:22:12 by rfani             #+#    #+#             */
-/*   Updated: 2025/03/03 03:58:09 by rfani            ###   ########.fr       */
+/*   Updated: 2025/03/05 18:48:36 by rfani            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,6 +21,7 @@
 #include <fcntl.h>
 
 char	*get_next_line(int fd);
+ssize_t	fill_buffer(char *buffer, int fd);
 int		scan_buff(
 			t_list **line_lst,
 			char *buffer, int *buff_index, ssize_t buff_size);
@@ -51,27 +52,16 @@ char	*get_next_line(int fd)
 	static char		*buffer;
 	static ssize_t	buff_size;
 	static int		buff_index;
-	t_list			*line_lst;
-	int				eof;
 
 	if (BUFFER_SIZE <= 0 || fd < 0 || read(fd, 0, 0) < 0)
 		return (NULL);
-	line_lst = NULL;
-	eof = 0;
 	if (buff_size == 0)
 	{
 		buffer = calloc(BUFFER_SIZE, sizeof(char));
-		buff_size = read(fd, buffer, BUFFER_SIZE);
+		if (!buffer)
+			return (NULL);
+		buff_size = fill_buffer(buffer, fd);
 	}
-	while (scan_buff(&line_lst, buffer, &buff_index, buff_size) && !eof)
-	{
-		buff_size = read(fd, buffer, BUFFER_SIZE);
-		buff_index = 0;
-		if (buff_size < BUFFER_SIZE)
-			eof = 1;
-	}
-	return (lst_to_str(&line_lst, buffer, buff_size));
-}
 
 int	scan_buff(
 	t_list **line_lst, char *buffer, int *buff_index, ssize_t buff_size)
