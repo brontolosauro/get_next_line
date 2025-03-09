@@ -6,7 +6,7 @@
 /*   By: rfani <rfani@student.42firenze.it>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/18 11:22:12 by rfani             #+#    #+#             */
-/*   Updated: 2025/03/05 18:48:36 by rfani            ###   ########.fr       */
+/*   Updated: 2025/03/09 13:19:58 by rfani            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,10 +21,8 @@
 #include <fcntl.h>
 
 char	*get_next_line(int fd);
-ssize_t	fill_buffer(char *buffer, int fd);
-int		scan_buff(
-			t_list **line_lst,
-			char *buffer, int *buff_index, ssize_t buff_size);
+int		scan_buff(t_list **line_lst, char *buffer, int *buff_index, \
+			ssize_t buff_size);
 void	store_item(t_list **line_lst, char buff_item);
 char	*lst_to_str(t_list **line_lst, char *buffer, ssize_t buff_size);
 
@@ -38,7 +36,7 @@ int	main(void)
 	line = get_next_line(fd);
 	while (line)
 	{
-		printf("%s", line);
+		printf("[%s]", line);
 		free(line);
 		line = get_next_line(fd);
 	}
@@ -52,37 +50,49 @@ char	*get_next_line(int fd)
 	static char		*buffer;
 	static ssize_t	buff_size;
 	static int		buff_index;
+	t_list			*line_lst;
 
 	if (BUFFER_SIZE <= 0 || fd < 0 || read(fd, 0, 0) < 0)
 		return (NULL);
-	if (buff_size == 0)
+	if (!buffer)
 	{
-		buffer = calloc(BUFFER_SIZE, sizeof(char));
+		buffer = (char *)calloc(BUFFER_SIZE, sizeof(char));
 		if (!buffer)
 			return (NULL);
-		buff_size = fill_buffer(buffer, fd);
+		buff_size = read(fd, buffer, BUFFER_SIZE);
 	}
+	line_lst = NULL;
+	while (scan_buff(&line_lst, buffer, &buff_index, buff_size))
+		buff_size = read(fd, buffer, BUFFER_SIZE);
+	return (lst_to_str(&line_lst, buffer, buff_size));
+}
 
 int	scan_buff(
 	t_list **line_lst, char *buffer, int *buff_index, ssize_t buff_size)
 {
+	int	continue_scan;
+
+	continue_scan = 0;
+	if (buff_size == 0)
+		return (continue_scan);
+	if (buff_size < 0)
+		return (*line_lst = NULL, continue_scan);
 	while (*buff_index < buff_size)
 	{
 		store_item(line_lst, buffer[*buff_index]);
 		if (buffer[*buff_index] == '\n')
 		{
-			if (*buff_index == buff_size - 1)
-				return (0);
 			(*buff_index)++;
-			return (0);
+			break ;
 		}
 		(*buff_index)++;
 	}
-	if ((buff_size < BUFFER_SIZE) && buff_index == buff_size - 1)
-		continue_scan = 0;
-	else
+	if (buff_size - BUFFER_SIZE == 0)
+	{
 		continue_scan = 1;
-	return (1);
+		*buff_index = 0;
+	}
+	return (continue_scan);
 }
 
 void	store_item(t_list **line_lst, char buff_item)
