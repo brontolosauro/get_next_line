@@ -1,3 +1,15 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   main.c                                             :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: rfani <rfani@student.42firenze.it>         +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2025/03/10 15:21:59 by rfani             #+#    #+#             */
+/*   Updated: 2025/03/10 15:22:43 by rfani            ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include <unistd.h>
 #include "get_next_line.h"
 #include <stdio.h>
@@ -10,7 +22,6 @@ int	main(void)
 	char	*line;
 
 	fd = open("./test.txt", O_RDONLY);
-	// printf("fd: %d\n", fd);
 	line = get_next_line(fd);
 	while (line)
 	{

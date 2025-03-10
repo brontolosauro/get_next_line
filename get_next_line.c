@@ -6,7 +6,7 @@
 /*   By: rfani <rfani@student.42firenze.it>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/18 11:22:12 by rfani             #+#    #+#             */
-/*   Updated: 2025/03/09 21:10:37 by rfani            ###   ########.fr       */
+/*   Updated: 2025/03/10 15:20:14 by rfani            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,15 +16,15 @@
 # define BUFFER_SIZE 32
 #endif
 // needed for main()
-#include <stdio.h>
-#include <stdlib.h>
-#include <fcntl.h>
+// #include <stdio.h>
+// #include <stdlib.h>
+// #include <fcntl.h>
 
 char	*get_next_line(int fd);
-int		scan_buff(t_list **line_lst, char *buffer, int *buff_index, \
+int		scan_buff(t_list **line_lst, char *buffer, int *buff_index,
 			ssize_t buff_size);
 void	store_item(t_list **line_lst, char buff_item);
-char	*lst_to_str(t_list **line_lst, char *buffer, ssize_t buff_size, int buff_index);
+char	*lst_to_str(t_list **line_lst, char *buffer);
 
 // int	main(void)
 // {
@@ -68,7 +68,7 @@ char	*get_next_line(int fd)
 		if (BUFFER_SIZE == 1 && buff_size == 0)
 			break ;
 	}
-	return (lst_to_str(&line_lst, buffer, buff_size, buff_index));
+	return (lst_to_str(&line_lst, buffer));
 }
 
 int	scan_buff(
@@ -85,7 +85,6 @@ int	scan_buff(
 		{
 			(*buff_index)++;
 			return (0);
-			// break ;
 		}
 		(*buff_index)++;
 	}
@@ -108,7 +107,7 @@ void	store_item(t_list **line_lst, char buff_item)
 	ft_lstadd_back(line_lst, tail);
 }
 
-char	*lst_to_str(t_list **line_lst, char *buffer, ssize_t buff_size, int buff_index)
+char	*lst_to_str(t_list **line_lst, char *buffer)
 {
 	char	*line_str;
 	t_list	*temp;
@@ -130,12 +129,5 @@ char	*lst_to_str(t_list **line_lst, char *buffer, ssize_t buff_size, int buff_in
 		i++;
 	}
 	ft_lstclear(line_lst, free);
-	if (buff_index)
-		if (buff_size)
-			;
-	// if (buff_size - BUFFER_SIZE < 0 && buff_index == buff_size)
-	// 			free(buffer);
-	// if (BUFFER_SIZE == 1 && buff_size == 0)
-	// 	free(buffer);
 	return (line_str);
 }
