@@ -21,7 +21,7 @@ int	main(void)
 	int		fd;
 	char	*line;
 
-	fd = open("./test.txt", O_RDONLY);
+	fd = open("./test_qualcosina2.txt", O_RDONLY);
 	line = get_next_line(fd);
 	while (line)
 	{
